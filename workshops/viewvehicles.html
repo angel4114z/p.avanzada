@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>View Vehicles</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <h1>View Vehicles</h1>
+    <br>
+    <table>
+        <thead>
+            <tr>
+                <th>type</th>
+                <th>Model name</th>
+                <th>Year</th>
+                <th>Engine</th>
+                <th>Chassis</th>
+                <th>Fuel Consumption</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr>
+                <td>{{vehicle.type}}</td>
+                <td>{{vehicle.model}}</td>
+                <td>{{vehicle.year}}</td>
+                <td>{{vehicle.engine.type}}</td>
+                <td>{{vehicle.chassis}}</td>
+                <td>{{vehicle.gasconsumption}}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
