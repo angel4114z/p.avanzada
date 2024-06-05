@@ -1,4 +1,6 @@
-class Note:
+from pydantic import BaseModel
+
+class Note(BaseModel):
     """
     this class represents a note
 
@@ -6,7 +8,7 @@ class Note:
         id: int
         title: str
         content: str
-        creator: User
+        creator: dict User
 
     methods:
         __init__(id: int, title: str, content: str, creator: User) -> None
@@ -16,11 +18,17 @@ class Note:
         #view_title() -> str
         #view_content() -> str
     """
-    def __init__(self, id: int, title: str, content: str, creator: str) -> None:
-        self.id = id
-        self.title = title
-        self.content = content
-        self.creator = creator
+
+    id: int
+    title: str
+    content: str
+    creator: dict
+
+    #def __init__(self, id: int, title: str, content: str, creator: str) -> None:
+    #    self.id = id
+    #    self.title = title
+    #    self.content = content
+    #    self.creator = creator
 
     def edit_title(self, new_title: str) -> None:
         self.title = new_title

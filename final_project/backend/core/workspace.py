@@ -1,13 +1,14 @@
 from core import note
+from pydantic import BaseModel
 
-class Workspace:
+class Workspace(BaseModel):
     """
     this class represents a workspace, which is a collection of notes
 
     parameters:
         id: int
         name: str
-        creator: User
+        creator: dict{User}
         list_users: list
         list_notes: list
 
@@ -21,12 +22,18 @@ class Workspace:
         view_notes() -> list
     """
     
-    def __init__(self, id: int, name: str, creator) -> None:
-        self.id = id
-        self.name = name
-        self.creator = creator
-        self.list_users = [creator]
-        self.list_notes = []
+    id: int
+    name: str
+    creator: dict
+    list_users: list
+    list_notes: list[note.Note]
+
+    #def __init__(self, id: int, name: str, creator) -> None:
+    #    self.id = id
+    #    self.name = name
+    #    self.creator = creator
+    #    self.list_users = [creator]
+    #    self.list_notes = []
 
     def add_user(self, user) -> None:
         self.list_users.append(user)

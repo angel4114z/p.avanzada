@@ -1,19 +1,78 @@
-from core.user import User
+from core.user import User, Userdb
 from core.note import Note
 from core.workspace import Workspace
-
-user1 = User(1, "angel", "angel@email.com", "password")
-note1 = Note(1, "note1", "this is the first note", "angel")
-note2 = Note(2, "note2", "this is the second note", "angel")
-workspace1 = Workspace(1, "workspace1", "angel")
-workspace2 = Workspace(1, "workspace2", "angel")
-workspace1.add_note(note1)
-workspace1.add_note(note2)
-workspace2.add_note(note1)
-user1.add_workspace(workspace1)
-user1.add_workspace(workspace2)
+from fastapi import FastAPI
+import uvicorn
+from core.db_connection import PostgresConnection
 
 
-print(user1.view_workspaces())
-print(user1.list_workspaces[0].view_notes())
-print(user1.list_workspaces[0].list_notes[0].view_note())   
+app = FastAPI()
+
+#---------------- USER ----------------
+
+@app.get("/login")
+def login(email: str, password: str):
+    return User.login(email, password)
+
+@app.post("/register")
+def register(name: str, email: str, password: str):
+    User.register(name, email, password)
+    return "User registered successfully"
+    
+
+#---------------- WORKSPACE ----------------
+
+@app.get("/viewWorkspaces")
+def view_workspaces():
+    pass
+
+@app.post("/createWorkspace")
+def create_workspace():
+    pass
+
+@app.post("/deleteWorkspace")
+def delete_workspace():
+    pass
+
+#---------------- edit workspace ----------------
+
+#--------- User ---------
+
+@app.post("/addUser")
+def add_user():
+    pass
+
+@app.post("/removeUser")
+def remove_user():
+    pass
+
+#----------- Note -----------
+
+@app.post("/createNote")
+def create_note():
+    pass
+
+@app.post("/deleteNote")
+def delete_note():
+    pass
+
+@app.get("/viewNotes")
+def view_notes():
+    pass
+
+@app.get("/viewNote")
+def view_note():
+    pass
+
+@app.post("/editNote")
+def edit_note():
+    pass
+
+
+#----------------- RUN -----------------
+
+if __name__ == "__main__":
+
+
+    Userdb.metadata.create_all(bind= PostgresConnection("postgres", "admin12345", "localhost", 5432, "db_test")) #esta mrd no sirve :D
+    uvicorn.run(app, host="0.0.0.0", port=8000)
