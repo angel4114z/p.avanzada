@@ -1,4 +1,4 @@
-from core.user import User, Userdb
+from core.user import User
 from core.note import Note
 from core.workspace import Workspace
 from fastapi import FastAPI
@@ -15,8 +15,8 @@ def login(email: str, password: str):
     return User.login(email, password)
 
 @app.post("/register")
-def register(name: str, email: str, password: str):
-    User.register(name, email, password)
+def register(user: User):
+    User.register(user.name, user.email, user.password)
     return "User registered successfully"
     
 
@@ -74,5 +74,5 @@ def edit_note():
 if __name__ == "__main__":
 
 
-    Userdb.metadata.create_all(bind= PostgresConnection("postgres", "admin12345", "localhost", 5432, "db_test")) #esta mrd no sirve :D
+    #Userdb.metadata.create_all(bind= PostgresConnection("postgres", "admin12345", "localhost", 5432, "db_test")) #esta mrd no sirve :D
     uvicorn.run(app, host="0.0.0.0", port=8000)
