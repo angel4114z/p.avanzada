@@ -27,8 +27,9 @@ def view_workspaces():
     pass
 
 @app.post("/createWorkspace")
-def create_workspace():
-    pass
+def create_workspace(workspace: Workspace):
+    Workspace.create_workspace(workspace.name, workspace.creator)
+    return "Workspace created successfully"
 
 @app.post("/deleteWorkspace")
 def delete_workspace():
@@ -38,9 +39,10 @@ def delete_workspace():
 
 #--------- User ---------
 
-@app.post("/addUser")
-def add_user():
-    pass
+@app.post("/workspace/addUser")
+def add_user(workspace: Workspace, user: User):
+    Workspace.add_user(workspace, user)
+    User.add_workspace(user, workspace)
 
 @app.post("/removeUser")
 def remove_user():

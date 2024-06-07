@@ -1,5 +1,10 @@
 from core import note
 from pydantic import BaseModel
+from typing import List, Dict
+from sqlalchemy import MetaData, Table, Column, Integer, String
+from .db_connection import PostgresConnection
+from dotenv import load_dotenv
+import os
 
 class Workspace(BaseModel):
     """
@@ -24,9 +29,9 @@ class Workspace(BaseModel):
     
     id: int
     name: str
-    creator: dict
-    list_users: list
-    list_notes: list[note.Note]
+    creator: str #dict
+    list_users: str #list
+    list_notes: str #list[note.Note]
 
     #def __init__(self, id: int, name: str, creator) -> None:
     #    self.id = id
@@ -35,9 +40,54 @@ class Workspace(BaseModel):
     #    self.list_users = [creator]
     #    self.list_notes = []
 
-    def add_user(self, user) -> None:
-        self.list_users.append(user)
-        user.add_workspace(self)
+    @staticmethod
+    def create_workspace(name: str, creator: dict):
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', String),
+            Column('userslist', String, default=""),
+            Column('noteslist', String, default="")
+        )
+        metadata.create_all(connection.engine)
+
+        query = workspaces.insert().values(name=name, creator=creator, userslist=creator)
+        session.execute(query)
+        session.commit()
+        session.close()
+
+    def add_user(workspace, user) -> None:
+        
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', String),
+            Column('userslist', String, default=""),
+            Column('noteslist', String, default="")
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.select().where(workspaces.c.id == workspace.id)
+        result = session.execute(query)
+
+        for row in result:
+            
+            users = row[3]
+            users = users + ", { 'id': " + f"{user.id}" + ", 'name': '" + user.name + "'}"
+
+            query = workspaces.update().where(workspaces.c.id == workspace.id).values(userslist=users)
+            session.execute(query)
+            session.commit()
+            session.close()
+
 
     def remove_user(self, user) -> None:
         self.list_users.remove(user)
