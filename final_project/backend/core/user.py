@@ -28,10 +28,35 @@ class User(BaseModel):
 
 
     @staticmethod
-    def login(self, email: str, password: str) -> bool:
-        if email == self.email and password == self.password:
-            return True
+    def login(email_: str, password_: str) -> bool:
+        for user in User.get_users():
+            if user.email == email_ and user.password == password_:
+                return True
         return False
+    
+    @staticmethod
+    def get_users() -> List["User"]:
+        connection = PostgresConnection("postgres", "admin12345", "localhost", 5432, "db_test")
+        session = connection.session()
+
+        metadata = MetaData()
+        users = Table('users', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('email', String),
+            Column('password', String),
+            Column('workspaceslist', String, default="")
+        )
+        metadata.create_all(connection.engine)
+
+        query = users.select()
+        result = session.execute(query)
+        users_list = []
+        for row in result:
+            user = User(id=row[0], name=row[1], email=row[2], password=row[3], list_workspaces=[])
+            users_list.append(user)
+        session.close()
+        return users_list
 
     @staticmethod
     def register(name_: str, email_: str, password_: str) -> None:

@@ -11,8 +11,8 @@ app = FastAPI()
 #---------------- USER ----------------
 
 @app.get("/login")
-def login(email: str, password: str):
-    return User.login(email, password)
+def login(user: User):
+    return User.login(user.email, user.password)
 
 @app.post("/register")
 def register(user: User):
