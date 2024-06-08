@@ -18,55 +18,60 @@ def login(user: User):
 def register(user: User):
     User.register(user.name, user.email, user.password)
     return "User registered successfully"
+
+@app.delete("/user/deleteWorkspace")
+def remove_workspace(user: User, workspace: Workspace):
+    user.remove_workspace(workspace)
     
 
 #---------------- WORKSPACE ----------------
 
 @app.get("/viewWorkspaces")
-def view_workspaces():
-    pass
+def view_workspaces(user : User):
+    return user.view_workspaces()
 
 @app.post("/createWorkspace")
 def create_workspace(workspace: Workspace):
     Workspace.create_workspace(workspace.name, workspace.creator)
     return "Workspace created successfully"
 
-@app.post("/deleteWorkspace")
-def delete_workspace():
-    pass
+@app.delete("/deleteWorkspace")
+def remove_workspace(user: User, workspace: Workspace):
+    user.delete_workspace(workspace)
+    
 
 #---------------- edit workspace ----------------
 
 #--------- User ---------
 
-@app.post("/workspace/addUser")
+@app.put("/workspace/addUser")
 def add_user(workspace: Workspace, user: User):
     Workspace.add_user(workspace, user)
     User.add_workspace(user, workspace)
 
-@app.post("/removeUser")
+@app.post("/workspace/removeUser")
 def remove_user():
     pass
 
 #----------- Note -----------
 
-@app.post("/createNote")
+@app.post("/workspace/createNote")
 def create_note():
     pass
 
-@app.post("/deleteNote")
+@app.post("/workspace/deleteNote")
 def delete_note():
     pass
 
-@app.get("/viewNotes")
+@app.get("/workspace/viewNotes")
 def view_notes():
     pass
 
-@app.get("/viewNote")
+@app.get("/workspace/viewNote")
 def view_note():
     pass
 
-@app.post("/editNote")
+@app.post("/workspace/editNote")
 def edit_note():
     pass
 

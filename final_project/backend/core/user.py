@@ -117,10 +117,48 @@ class User(BaseModel):
             session.close()
 
     def remove_workspace(self, workspace) -> None:
-        self.list_workspaces.remove(workspace)
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))  
+        session = connection.session()
+        metadata = MetaData()
+        users = Table('users', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('email', String),
+            Column('password', String),
+            Column('workspaceslist', String, default="")
+        )
+        metadata.create_all(connection.engine)
+        query = users.select().where(users.c.id == self.id)
+        result = session.execute(query)
+        for row in result:
+            workspaces = row[4]
+            workspace_ = {"id": workspace.id, "name": workspace.name}
+            workspaces = workspaces.replace(str(workspace_), "")
+            query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
+            session.execute(query)
+            session.commit()
+            session.close()
 
     def view_workspaces(self) -> list:
-        return self.list_workspaces
+        
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        users = Table('users', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('email', String),
+            Column('password', String),
+            Column('workspaceslist', String, default="")
+        )
+        metadata.create_all(connection.engine)
+        query = users.select().where(users.c.id == self.id)
+        result = session.execute(query)
+        for row in result:
+            workspaces = row[4]
+            return workspaces
     
     class config:
         orm_mode = True
