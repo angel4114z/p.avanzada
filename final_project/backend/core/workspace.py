@@ -1,4 +1,4 @@
-from core import note
+from .note import Note
 from pydantic import BaseModel
 from typing import List, Dict
 from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
@@ -165,16 +165,126 @@ class Workspace(BaseModel):
         users = json.loads(userstr)
         return users
 
-    def add_note(self, note: note.Note) -> None:
-        self.list_notes.append(note)
+    def create_note(self, note: Note) -> None:
 
-    def remove_note(self, note: note.Note) -> None:
-        self.list_notes.remove(note)
+        Note.create_note(note.title, note.content) 
+
+        #en algun lado de aqui el id de la nota se pierde y no se guarda en la lista, pero en la base de datos si se guarda
+
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.select().where(workspaces.c.id == self.id)
+        result = session.execute(query).fetchone()
+        note_ = {"id": note.id, "title": note.title}
+        notesstr = str(result[4])
+        if notesstr == "{}":
+            notes = json.dumps([note_])
+        else:
+            noteslist = json.loads(notesstr)
+            noteslist.append(note_)
+            notes = json.dumps(noteslist)
+        query = workspaces.update().where(workspaces.c.id == self.id).values(noteslist=notes)
+        session.execute(query)
+        session.commit()
+        session.close()
+
+    def delete_note(self, note: Note) -> None:
+
+        Note.delete_note({"id": note.id, "title": note.title})
+
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+
+        query = workspaces.select().where(workspaces.c.id == self.id)
+        result = session.execute(query).fetchone()
+        notesstr = str(result[4])
+        note_ = {"id": note.id, "title": note.title}
+        noteslist = json.loads(notesstr)
+        noteslist.remove(note_)
+        notes = json.dumps(noteslist)
+        query = workspaces.update().where(workspaces.c.id == self.id).values(noteslist=notes)
+        session.execute(query)
+        session.commit()
+        session.close()
 
     def view_notes(self) -> list:
-        for note in self.list_notes:
-            print(note.view_title())
-        return self.list_notes
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.select().where(workspaces.c.id == self.id)
+        result = session.execute(query).fetchone()
+        notesstr = str(result[4])
+        notes = json.loads(notesstr)
+        return notes
+
+    def edit_note(self, note: Note, new_content: Note) -> None:
+
+        note.edit_content(note, new_content)
+
+        if note.title != new_content.title:
+            oldnote = {"id": note.id, "title": note.title}
+            note.edit_title(note, new_content.title)
+
+            load_dotenv()
+            connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+            session = connection.session()
+            metadata = MetaData()
+
+            workspaces = Table('workspaces', metadata,
+                Column('id', Integer, primary_key=True),
+                Column('name', String),
+                Column('creator', JSON, default={}),
+                Column('userslist', JSON, default={}),
+                Column('noteslist', JSON, default={})
+            )
+            metadata.create_all(connection.engine)
+
+            query = workspaces.select().where(workspaces.c.id == self.id)
+            result = session.execute(query).fetchone()
+            notesstr = str(result[4])
+            note_ = {"id": note.id, "title": note.title}
+            noteslist = json.loads(notesstr)
+            noteslist.remove(oldnote)
+            noteslist.append(note_)
+            notes = json.dumps(noteslist)
+            query = workspaces.update().where(workspaces.c.id == self.id).values(noteslist=notes)
+            session.execute(query)
+            session.commit()
+            session.close()
+
+    def view_note(self, note: Note) -> dict:
+        return note.view_note(note.id, note.title)
     
     class config:
         orm_mode = True

@@ -63,30 +63,28 @@ def view_users(workspace: Workspace):
 #----------- Note -----------
 
 @app.post("/workspace/createNote")
-def create_note():
-    pass
+def create_note(note: Note, workspace: Workspace):
+    Workspace.create_note(workspace, note)
 
-@app.post("/workspace/deleteNote")
-def delete_note():
-    pass
+@app.delete("/workspace/deleteNote")
+def delete_note(note: Note, workspace: Workspace):
+    Workspace.delete_note(workspace, note) #hay que pasar bien el id de la nota, el error ya esta en workspace.py, pero si quita la nota de la lista
 
 @app.get("/workspace/viewNotes")
-def view_notes():
-    pass
+def view_notes(workspace: Workspace):
+    return workspace.view_notes()
 
 @app.get("/workspace/viewNote")
-def view_note():
-    pass
+def view_note(workspace: Workspace, note: Note):
+    workspace.view_note(note) # TypeError: Note.view_note() takes 2 positional arguments but 3 were given #esta ese error
 
-@app.post("/workspace/editNote")
-def edit_note():
-    pass
+@app.put("/workspace/editNote")
+def edit_note(workspace: Workspace, note: Note, new_note: Note):
+    workspace.edit_note(note, new_note) #TypeError: Note.edit_title() takes 2 positional arguments but 3 were given, otra vez xd
+    
 
 
 #----------------- RUN -----------------
 
 if __name__ == "__main__":
-
-
-    #Userdb.metadata.create_all(bind= PostgresConnection("postgres", "admin12345", "localhost", 5432, "db_test")) #esta mrd no sirve :D
     uvicorn.run(app, host="0.0.0.0", port=8000)
