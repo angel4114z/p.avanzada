@@ -49,7 +49,7 @@ def remove_workspace(workspace: Workspace):
 @app.put("/workspace/addUser")
 def add_user(workspace: Workspace, user: User):
     Workspace.add_user(workspace, user)
-    user.add_workspace(workspace)
+    user.add_workspace(user, workspace)
 
 @app.put("/workspace/removeUser")
 def remove_user(workspace: Workspace, user: User):

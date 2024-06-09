@@ -57,6 +57,8 @@ class Workspace(BaseModel):
         )
         metadata.create_all(connection.engine)
 
+        creator = json.dumps([creator])
+
         query = workspaces.insert().values(name=name, creator=creator, userslist=creator)
         session.execute(query)
         session.commit()
@@ -100,9 +102,11 @@ class Workspace(BaseModel):
         result = session.execute(query).fetchone()
 
         userstr = str(result[3])
+        print(userstr)
+
         user_ = {"id": user.id, "name": user.name}
 
-        if users == "{}":
+        if userstr == "{}":
             users = json.dumps([user_])
         else:
             userlist = json.loads(userstr)
@@ -133,15 +137,14 @@ class Workspace(BaseModel):
 
         userstr = str(result[3])
         user_ = {"id": user.id, "name": user.name}
-        
         userlist = json.loads(userstr)
         userlist.remove(user_)
         users = json.dumps(userlist)
-        
+
         query = workspaces.update().where(workspaces.c.id == self.id).values(userslist=users)
         session.execute(query)
         session.commit()
-        session.close() # hacer postman
+        session.close()
 
     def view_users(self) -> list:
         load_dotenv()
@@ -157,11 +160,10 @@ class Workspace(BaseModel):
         )
         metadata.create_all(connection.engine)
         query = workspaces.select().where(workspaces.c.id == self.id)
-        result = session.execute(query)
-        for row in result:
-            userlist = row[3]
-            users = json.loads(userlist)
-        return users # hacer postman
+        result = session.execute(query).fetchone()
+        userstr = str(result[3])
+        users = json.loads(userstr)
+        return users
 
     def add_note(self, note: note.Note) -> None:
         self.list_notes.append(note)
