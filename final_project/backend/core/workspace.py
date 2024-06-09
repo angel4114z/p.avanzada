@@ -167,7 +167,7 @@ class Workspace(BaseModel):
 
     def create_note(self, note: Note) -> None:
 
-        Note.create_note(note.title, note.content) 
+        note.id = Note.create_note(note.title, note.content) 
 
         #en algun lado de aqui el id de la nota se pierde y no se guarda en la lista, pero en la base de datos si se guarda
 
@@ -250,11 +250,12 @@ class Workspace(BaseModel):
 
     def edit_note(self, note: Note, new_content: Note) -> None:
 
-        note.edit_content(note, new_content)
+        
+        note.edit_content(new_content.content)
 
         if note.title != new_content.title:
             oldnote = {"id": note.id, "title": note.title}
-            note.edit_title(note, new_content.title)
+            note.edit_title(new_content.title)
 
             load_dotenv()
             connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
@@ -273,7 +274,7 @@ class Workspace(BaseModel):
             query = workspaces.select().where(workspaces.c.id == self.id)
             result = session.execute(query).fetchone()
             notesstr = str(result[4])
-            note_ = {"id": note.id, "title": note.title}
+            note_ = {"id": note.id, "title": new_content.title}
             noteslist = json.loads(notesstr)
             noteslist.remove(oldnote)
             noteslist.append(note_)
@@ -283,8 +284,8 @@ class Workspace(BaseModel):
             session.commit()
             session.close()
 
-    def view_note(self, note: Note) -> dict:
-        return note.view_note(note.id, note.title)
+    #def view_note(note: Note) -> dict:
+    #    return note.view_note() #esto no se si es necesario
     
     class config:
         orm_mode = True

@@ -68,19 +68,19 @@ def create_note(note: Note, workspace: Workspace):
 
 @app.delete("/workspace/deleteNote")
 def delete_note(note: Note, workspace: Workspace):
-    Workspace.delete_note(workspace, note) #hay que pasar bien el id de la nota, el error ya esta en workspace.py, pero si quita la nota de la lista
+    Workspace.delete_note(workspace, note)
 
 @app.get("/workspace/viewNotes")
 def view_notes(workspace: Workspace):
     return workspace.view_notes()
 
 @app.get("/workspace/viewNote")
-def view_note(workspace: Workspace, note: Note):
-    workspace.view_note(note) # TypeError: Note.view_note() takes 2 positional arguments but 3 were given #esta ese error
+def view_note(note: Note):
+    return note.view_note()
 
 @app.put("/workspace/editNote")
 def edit_note(workspace: Workspace, note: Note, new_note: Note):
-    workspace.edit_note(note, new_note) #TypeError: Note.edit_title() takes 2 positional arguments but 3 were given, otra vez xd
+    workspace.edit_note(note, new_note)
     
 
 

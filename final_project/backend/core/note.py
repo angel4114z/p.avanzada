@@ -34,7 +34,7 @@ class Note(BaseModel):
     #    self.content = content
 
     @staticmethod
-    def create_note(title_: str, content_: str) -> None:
+    def create_note(title_: str, content_: str) -> int:
 
         load_dotenv()
         connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
@@ -50,8 +50,12 @@ class Note(BaseModel):
 
         query = notes.insert().values(title=title_, content=content_)
         session.execute(query)
+        query = notes.select().where(notes.c.title == title_)
+        result = session.execute(query).fetchone()
+        id_ = result[0]
         session.commit()
         session.close()
+        return id_
 
     @staticmethod
     def delete_note(note_) -> None:
@@ -110,7 +114,7 @@ class Note(BaseModel):
         session.commit()
         session.close()
 
-    def view_note(id, title) -> dict:
+    def view_note(self) -> dict:
         load_dotenv()
         connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
         session = connection.session()
@@ -123,7 +127,7 @@ class Note(BaseModel):
         )
         metadata.create_all(connection.engine)
 
-        query = notes.select().where(notes.c.id == id).where(notes.c.title == title)
+        query = notes.select().where(notes.c.id == self.id).where(notes.c.title == self.title)
         result = session.execute(query).fetchone()
         session.close()
         note_ = {"id": result[0], "title": result[1], "content": result[2]}
