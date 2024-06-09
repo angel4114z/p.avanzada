@@ -62,6 +62,26 @@ class Workspace(BaseModel):
         session.commit()
         session.close()
 
+    @staticmethod
+    def delete_workspace(workspace) -> None:
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.delete().where(workspaces.c.id == workspace.id)
+        session.execute(query)
+        session.commit()
+        session.close()
+        
+
     def add_user(workspace, user) -> None:
         
         load_dotenv()
