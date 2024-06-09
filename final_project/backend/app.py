@@ -34,7 +34,7 @@ def view_workspaces(user : User):
 def create_workspace(workspace: Workspace):
     Workspace.create_workspace(workspace.name, workspace.creator)
     user = User(id=workspace.creator["id"], name=workspace.creator["name"], email="", password="", list_workspaces=[])
-    User.add_workspace(user, workspace)
+    user.add_workspace(user, workspace)
     return "Workspace created successfully"
 
 @app.delete("/deleteWorkspace")
@@ -49,11 +49,16 @@ def remove_workspace(workspace: Workspace):
 @app.put("/workspace/addUser")
 def add_user(workspace: Workspace, user: User):
     Workspace.add_user(workspace, user)
-    User.add_workspace(user, workspace)
+    user.add_workspace(workspace)
 
 @app.put("/workspace/removeUser")
-def remove_user():
-    pass
+def remove_user(workspace: Workspace, user: User):
+    workspace.remove_user(user)
+    user.remove_workspace(workspace)
+
+@app.get("/workspace/viewUsers")
+def view_users(workspace: Workspace):
+    return workspace.view_users()
 
 #----------- Note -----------
 

@@ -101,24 +101,21 @@ class User(BaseModel):
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
-        result = session.execute(query)
-
-        for row in result:
-            workspaceslist = [row[4]]
-            print(workspaceslist)
-
-            if workspaceslist == "[{}]":
-                workspaces = workspace_
-            else:
-                print("workspaceslist: ", workspaceslist)
-                workspaceslist.append(workspace_)
-                workspaces = json.dumps(workspaceslist)
+        result = session.execute(query).fetchone()
 
 
-            query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
-            session.execute(query)
-            session.commit()
-            session.close()
+        workspacesstr = str(result[4])
+        if workspacesstr == "{}":
+            workspaces = json.dumps([workspace_])
+        else:
+            workspaceslist = json.loads(workspacesstr) #convert to list
+            workspaceslist.append(workspace_)
+            workspaces = json.dumps(workspaceslist) #convert to json string
+
+        query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
+        session.execute(query)
+        session.commit()
+        session.close()
 
     def remove_workspace(self, workspace) -> None:
         load_dotenv()
@@ -134,18 +131,19 @@ class User(BaseModel):
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
-        result = session.execute(query)
-        for row in result:
-            workspaceslist = row[4]
-            workspace_ = {"id": workspace.id, "name": workspace.name}
-            workspaces = json.loads(workspaceslist)
-            workspaces.remove(workspace_)
-            workspaces = json.dumps(workspaces)
+        result = session.execute(query).fetchone()
+        
+        workspacestr = str(result[4])
+
+        workspace_ = {"id": workspace.id, "name": workspace.name}
+        workspaceslist = json.loads(workspacestr)
+        workspaceslist.remove(workspace_)
+        workspaces = json.dumps(workspaceslist)
             
-            query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
-            session.execute(query)
-            session.commit()
-            session.close()
+        query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
+        session.execute(query)
+        session.commit()
+        session.close()
 
     def view_workspaces(self) -> list:
         
@@ -162,13 +160,11 @@ class User(BaseModel):
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
-        result = session.execute(query)
+        result = session.execute(query).fetchone()
         
-        for row in result:
-            workspaceslist = row[4]
-            #workspaces_json = workspaces.replace('\'', '"').replace('(', '[').replace(')', ']')
-            workspaceslist = json.loads(workspaceslist)
-            return workspaceslist
+        workspacestr = str(result[4])
+        workspaceslist = json.loads(workspacestr)
+        return workspaceslist
     
     class config:
         orm_mode = True

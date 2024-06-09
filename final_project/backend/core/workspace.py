@@ -80,7 +80,7 @@ class Workspace(BaseModel):
         session.execute(query)
         session.commit()
         session.close()
-        
+
 
     def add_user(workspace, user) -> None:
         
@@ -97,29 +97,71 @@ class Workspace(BaseModel):
         )
         metadata.create_all(connection.engine)
         query = workspaces.select().where(workspaces.c.id == workspace.id)
-        result = session.execute(query)
+        result = session.execute(query).fetchone()
 
-        for row in result:
-            
-            users = row[3]
-            user_ = {"id": user.id, "name": user.name}
-            if users == "":
-                users = user_
-            else:
-                users = users + ", " + user_
+        userstr = str(result[3])
+        user_ = {"id": user.id, "name": user.name}
 
-            query = workspaces.update().where(workspaces.c.id == workspace.id).values(userslist=users)
-            session.execute(query)
-            session.commit()
-            session.close()
+        if users == "{}":
+            users = json.dumps([user_])
+        else:
+            userlist = json.loads(userstr)
+            userlist.append(user_)
+            users = json.dumps(userlist)
+        
+        query = workspaces.update().where(workspaces.c.id == workspace.id).values(userslist=users)
+        session.execute(query)
+        session.commit()
+        session.close()
 
 
     def remove_user(self, user) -> None:
-        self.list_users.remove(user)
-        user.remove_workspace(self)
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.select().where(workspaces.c.id == self.id)
+        result = session.execute(query).fetchone()
+
+        userstr = str(result[3])
+        user_ = {"id": user.id, "name": user.name}
+        
+        userlist = json.loads(userstr)
+        userlist.remove(user_)
+        users = json.dumps(userlist)
+        
+        query = workspaces.update().where(workspaces.c.id == self.id).values(userslist=users)
+        session.execute(query)
+        session.commit()
+        session.close() # hacer postman
 
     def view_users(self) -> list:
-        return self.list_users
+        load_dotenv()
+        connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
+        session = connection.session()
+        metadata = MetaData()
+        workspaces = Table('workspaces', metadata,
+            Column('id', Integer, primary_key=True),
+            Column('name', String),
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
+        )
+        metadata.create_all(connection.engine)
+        query = workspaces.select().where(workspaces.c.id == self.id)
+        result = session.execute(query)
+        for row in result:
+            userlist = row[3]
+            users = json.loads(userlist)
+        return users # hacer postman
 
     def add_note(self, note: note.Note) -> None:
         self.list_notes.append(note)
@@ -131,3 +173,6 @@ class Workspace(BaseModel):
         for note in self.list_notes:
             print(note.view_title())
         return self.list_notes
+    
+    class config:
+        orm_mode = True
