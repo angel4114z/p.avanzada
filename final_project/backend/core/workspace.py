@@ -5,6 +5,7 @@ from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
 from .db_connection import PostgresConnection
 from dotenv import load_dotenv
 import os
+import json
 
 class Workspace(BaseModel):
     """
@@ -30,8 +31,8 @@ class Workspace(BaseModel):
     id: int
     name: str
     creator: dict
-    list_users: dict  #list[User]
-    list_notes: dict #list[note.Note]
+    list_users: list | None = None #list[User]
+    list_notes: list | None = None #list[note.Note]
 
     #def __init__(self, id: int, name: str, creator) -> None:
     #    self.id = id

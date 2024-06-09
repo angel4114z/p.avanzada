@@ -26,7 +26,7 @@ class User(BaseModel):
     name: str
     email: str
     password: str
-    list_workspaces: list #List[Dict[str, int]]  | None = None
+    list_workspaces: list | None = None
 
 
     @staticmethod
@@ -136,9 +136,12 @@ class User(BaseModel):
         query = users.select().where(users.c.id == self.id)
         result = session.execute(query)
         for row in result:
-            workspaces = row[4]
+            workspaceslist = row[4]
             workspace_ = {"id": workspace.id, "name": workspace.name}
-            workspaces = workspaces.replace(str(workspace_), "")
+            workspaces = json.loads(workspaceslist)
+            workspaces.remove(workspace_)
+            workspaces = json.dumps(workspaces)
+            
             query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
             session.execute(query)
             session.commit()
@@ -162,10 +165,10 @@ class User(BaseModel):
         result = session.execute(query)
         
         for row in result:
-            workspaces = row[4]
+            workspaceslist = row[4]
             #workspaces_json = workspaces.replace('\'', '"').replace('(', '[').replace(')', ']')
-            workspaces = json.loads(workspaces)
-            return workspaces
+            workspaceslist = json.loads(workspaceslist)
+            return workspaceslist
     
     class config:
         orm_mode = True

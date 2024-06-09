@@ -23,17 +23,17 @@ def register(user: User):
 def remove_workspace(user: User, workspace: Workspace):
     user.remove_workspace(workspace)
     
+@app.get("/user/viewWorkspaces")
+def view_workspaces(user : User):
+    return user.view_workspaces()
 
 #---------------- WORKSPACE ----------------
 
-@app.get("/viewWorkspaces")
-def view_workspaces(user : User):
-    return user.view_workspaces()
 
 @app.post("/createWorkspace")
 def create_workspace(workspace: Workspace):
     Workspace.create_workspace(workspace.name, workspace.creator)
-    user = User(id=workspace.creator["id"], name=workspace.creator["name"], email="", password="", list_workspaces={})
+    user = User(id=workspace.creator["id"], name=workspace.creator["name"], email="", password="", list_workspaces=[])
     User.add_workspace(user, workspace)
     return "Workspace created successfully"
 
@@ -51,7 +51,7 @@ def add_user(workspace: Workspace, user: User):
     Workspace.add_user(workspace, user)
     User.add_workspace(user, workspace)
 
-@app.post("/workspace/removeUser")
+@app.put("/workspace/removeUser")
 def remove_user():
     pass
 
