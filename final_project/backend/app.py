@@ -33,6 +33,8 @@ def view_workspaces(user : User):
 @app.post("/createWorkspace")
 def create_workspace(workspace: Workspace):
     Workspace.create_workspace(workspace.name, workspace.creator)
+    user = User(id=workspace.creator["id"], name=workspace.creator["name"], email="", password="", list_workspaces={})
+    User.add_workspace(user, workspace)
     return "Workspace created successfully"
 
 @app.delete("/deleteWorkspace")

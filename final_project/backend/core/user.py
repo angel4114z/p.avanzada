@@ -1,9 +1,10 @@
 from pydantic import BaseModel
 from typing import List, Dict
-from sqlalchemy import MetaData, Table, Column, Integer, String
+from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
 from .db_connection import PostgresConnection
 from dotenv import load_dotenv
 import os
+import json
 
 
 class User(BaseModel):
@@ -25,7 +26,7 @@ class User(BaseModel):
     name: str
     email: str
     password: str
-    list_workspaces: List[Dict[str, int]]  | None = None
+    list_workspaces: list #List[Dict[str, int]]  | None = None
 
 
     @staticmethod
@@ -47,7 +48,7 @@ class User(BaseModel):
             Column('name', String),
             Column('email', String),
             Column('password', String),
-            Column('workspaceslist', String, default="")
+            Column('workspaceslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
 
@@ -63,6 +64,7 @@ class User(BaseModel):
     @staticmethod
     def register(name_: str, email_: str, password_: str) -> None:
         
+        load_dotenv()
         connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
         session = connection.session()
 
@@ -72,7 +74,7 @@ class User(BaseModel):
             Column('name', String),
             Column('email', String),
             Column('password', String),
-            Column('workspaceslist', String, default="")
+            Column('workspaceslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
 
@@ -85,8 +87,6 @@ class User(BaseModel):
     @staticmethod
     def add_workspace(self, workspace) -> None:
         workspace_ = {"id": workspace.id, "name": workspace.name}
-
-        print(workspace_)
         
         load_dotenv()
         connection = PostgresConnection(os.getenv("DB_USER"), os.getenv("DB_PASSWORD"), os.getenv("DB_HOST"), os.getenv("DB_PORT"), os.getenv("DB_NAME"))
@@ -97,19 +97,23 @@ class User(BaseModel):
             Column('name', String),
             Column('email', String),
             Column('password', String),
-            Column('workspaceslist', String, default="")
+            Column('workspaceslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
         result = session.execute(query)
 
         for row in result:
-            workspaces = row[4]
+            workspaceslist = [row[4]]
+            print(workspaceslist)
 
-            if workspaces == "":
-                workspaces = str(workspace_)
+            if workspaceslist == "[{}]":
+                workspaces = workspace_
             else:
-                workspaces = workspaces + ", " + str(workspace_)
+                print("workspaceslist: ", workspaceslist)
+                workspaceslist.append(workspace_)
+                workspaces = json.dumps(workspaceslist)
+
 
             query = users.update().where(users.c.id == self.id).values(workspaceslist=workspaces)
             session.execute(query)
@@ -126,7 +130,7 @@ class User(BaseModel):
             Column('name', String),
             Column('email', String),
             Column('password', String),
-            Column('workspaceslist', String, default="")
+            Column('workspaceslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
@@ -151,16 +155,17 @@ class User(BaseModel):
             Column('name', String),
             Column('email', String),
             Column('password', String),
-            Column('workspaceslist', String, default="")
+            Column('workspaceslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
         query = users.select().where(users.c.id == self.id)
         result = session.execute(query)
+        
         for row in result:
             workspaces = row[4]
+            #workspaces_json = workspaces.replace('\'', '"').replace('(', '[').replace(')', ']')
+            workspaces = json.loads(workspaces)
             return workspaces
     
     class config:
         orm_mode = True
-    
-

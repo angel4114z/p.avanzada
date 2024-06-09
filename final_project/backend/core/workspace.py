@@ -1,7 +1,7 @@
 from core import note
 from pydantic import BaseModel
 from typing import List, Dict
-from sqlalchemy import MetaData, Table, Column, Integer, String
+from sqlalchemy import MetaData, Table, Column, Integer, String, JSON
 from .db_connection import PostgresConnection
 from dotenv import load_dotenv
 import os
@@ -29,9 +29,9 @@ class Workspace(BaseModel):
     
     id: int
     name: str
-    creator: str #dict
-    list_users: str #list
-    list_notes: str #list[note.Note]
+    creator: dict
+    list_users: dict  #list[User]
+    list_notes: dict #list[note.Note]
 
     #def __init__(self, id: int, name: str, creator) -> None:
     #    self.id = id
@@ -50,9 +50,9 @@ class Workspace(BaseModel):
         workspaces = Table('workspaces', metadata,
             Column('id', Integer, primary_key=True),
             Column('name', String),
-            Column('creator', String),
-            Column('userslist', String, default=""),
-            Column('noteslist', String, default="")
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
 
@@ -70,9 +70,9 @@ class Workspace(BaseModel):
         workspaces = Table('workspaces', metadata,
             Column('id', Integer, primary_key=True),
             Column('name', String),
-            Column('creator', String),
-            Column('userslist', String, default=""),
-            Column('noteslist', String, default="")
+            Column('creator', JSON, default={}),
+            Column('userslist', JSON, default={}),
+            Column('noteslist', JSON, default={})
         )
         metadata.create_all(connection.engine)
         query = workspaces.select().where(workspaces.c.id == workspace.id)
@@ -81,7 +81,11 @@ class Workspace(BaseModel):
         for row in result:
             
             users = row[3]
-            users = users + ", { 'id': " + f"{user.id}" + ", 'name': '" + user.name + "'}"
+            user_ = {"id": user.id, "name": user.name}
+            if users == "":
+                users = user_
+            else:
+                users = users + ", " + user_
 
             query = workspaces.update().where(workspaces.c.id == workspace.id).values(userslist=users)
             session.execute(query)
