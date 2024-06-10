@@ -20,7 +20,6 @@ def login(user: User):
 def register(user: User):
     """this service is used to register the user"""
     User.register(user.name, user.email, user.password)
-    return "User registered successfully"
 
 
 @app.delete("/user/deleteWorkspace")
@@ -41,7 +40,7 @@ def view_workspaces(user: User):
 @app.post("/createWorkspace")
 def create_workspace(workspace: Workspace):
     """this service is used to create a workspace"""
-    Workspace.create_workspace(workspace.name, workspace.creator)
+    w_id = Workspace.create_workspace(workspace.name, workspace.creator)
     user = User(
         id=workspace.creator["id"],
         name=workspace.creator["name"],
@@ -49,6 +48,7 @@ def create_workspace(workspace: Workspace):
         password="",
         list_workspaces=[],
     )
+    workspace.id = w_id
     user.add_workspace(user, workspace)
     return "Workspace created successfully"
 
@@ -56,6 +56,16 @@ def create_workspace(workspace: Workspace):
 @app.delete("/deleteWorkspace")
 def remove_workspace(workspace: Workspace):
     """this service is used to delete a workspace"""
+    userslist = workspace.view_users()
+    for user in userslist:
+        user_ = User(
+            id=user["id"],
+            name=user["name"],
+            email="",
+            password="",
+            list_workspaces=[],
+        )
+        user_.remove_workspace(workspace)
     Workspace.delete_workspace(workspace)
 
 

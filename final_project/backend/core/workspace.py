@@ -36,7 +36,7 @@ class Workspace(BaseModel):
     list_notes: list | None = None
 
     @staticmethod
-    def create_workspace(name: str, creator: dict) -> None:
+    def create_workspace(name: str, creator: dict) -> int:
         """
         this method is used to create a workspace
         parameters:
@@ -71,8 +71,12 @@ class Workspace(BaseModel):
             name=name, creator=creator, userslist=creator
         )
         session.execute(query)
+        result = session.execute(workspaces.select().where(workspaces.c.name == name))
+        workspace = result.fetchone()
+        id_ = workspace[0]
         session.commit()
         session.close()
+        return id_
 
     @staticmethod
     def delete_workspace(workspace) -> None:
